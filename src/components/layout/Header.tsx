@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useWorlds } from '../../context/WorldContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '../ui/Button';
-import { Menu, X, Globe, Compass, User, LogOut, Book, Wand2 } from 'lucide-react';
+import { Menu, X, Globe, Compass, User, LogOut, Book, Wand2, Sun, Moon } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const { currentWorld } = useWorlds();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,7 +33,21 @@ const Header: React.FC = () => {
   return (
     <header className="bg-gradient-to-r from-indigo-900 to-purple-800 text-white shadow-lg">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex flex-col md:flex-row items-center justify-between py-4 space-y-4 md:space-y-0">
+          <div className="md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleTheme()}
+              className="text-white hover:text-indigo-200"
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
           {/* Logo */}
           <div 
             className="flex items-center space-x-2 cursor-pointer"
@@ -90,6 +106,18 @@ const Header: React.FC = () => {
 
           {/* User Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleTheme()}
+              className="text-white hover:text-indigo-200"
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
             {user ? (
               <div className="flex items-center space-x-4">
                 <div className="text-sm">

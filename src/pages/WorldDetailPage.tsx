@@ -10,9 +10,10 @@ import CharacterForm from '../components/forms/CharacterForm';
 import MapForm from '../components/forms/MapForm';
 import PowerSystemForm from '../components/forms/PowerSystemForm';
 import WorldForm from '../components/forms/WorldForm';
-import { Plus, User, MapPin, Zap, Book, ChevronRight, Pencil, Share2 } from 'lucide-react';
+import LoreForm from '../components/forms/LoreForm';
+import { Plus, User, MapPin, Zap, Book, ChevronRight, Pencil, Share2, Trash } from 'lucide-react';
 import { useWorlds } from '../context/WorldContext';
-import { Character, Map, PowerSystem } from '../types';
+import { Character, Map, PowerSystem, Lore } from '../types';
 
 const WorldDetailPage: React.FC = () => {
   const { 
@@ -21,12 +22,16 @@ const WorldDetailPage: React.FC = () => {
     characters,
     maps,
     powerSystems,
+    lore,
     createCharacter,
     updateCharacter,
     createMap,
     updateMap,
     createPowerSystem,
-    updatePowerSystem
+    updatePowerSystem,
+    createLore,
+    updateLore,
+    deleteLore
   } = useWorlds();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'characters' | 'maps' | 'powers' | 'lore'>('overview');
@@ -35,10 +40,12 @@ const WorldDetailPage: React.FC = () => {
   const [editCharacterModal, setEditCharacterModal] = useState(false);
   const [editMapModal, setEditMapModal] = useState(false);
   const [editPowerSystemModal, setEditPowerSystemModal] = useState(false);
+  const [editLoreModal, setEditLoreModal] = useState(false);
   
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [selectedMap, setSelectedMap] = useState<Map | null>(null);
   const [selectedPowerSystem, setSelectedPowerSystem] = useState<PowerSystem | null>(null);
+  const [selectedLore, setSelectedLore] = useState<Lore | null>(null);
 
   if (!currentWorld) {
     return <div>No world selected</div>;
@@ -92,6 +99,36 @@ const WorldDetailPage: React.FC = () => {
       setSelectedPowerSystem(null);
     } catch (error) {
       console.error('Failed to save power system:', error);
+    }
+  };
+
+  const handleLoreSubmit = async (data: Partial<Lore>) => {
+    try {
+      if (selectedLore) {
+        await updateLore(selectedLore.id, {
+          title: data.title as string,
+          content: data.content as string,
+          category: data.category as string,
+          location: data.location as string,
+          era: data.era as string,
+          importance: data.importance as 'minor' | 'major' | 'crucial',
+          isSecret: data.isSecret as boolean
+        });
+      } else {
+        await createLore({
+          title: data.title as string,
+          content: data.content as string,
+          category: data.category as string,
+          location: data.location as string,
+          era: data.era as string,
+          importance: data.importance as 'minor' | 'major' | 'crucial',
+          isSecret: data.isSecret as boolean
+        });
+      }
+      setEditLoreModal(false);
+      setSelectedLore(null);
+    } catch (error) {
+      console.error('Failed to save lore:', error);
     }
   };
 
@@ -198,6 +235,67 @@ const WorldDetailPage: React.FC = () => {
       </div>
       
       <main className="flex-grow container mx-auto px-4 py-8">
+        {activeTab === 'lore' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Lore Entries</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                icon={<Plus className="h-4 w-4" />}
+                onClick={() => {
+                  setSelectedLore(null);
+                  setEditLoreModal(true);
+                }}
+              >
+                Add Lore
+              </Button>
+            </div>
+
+            {lore.length === 0 ? (
+              <p className="text-gray-500">No lore entries yet</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {lore.map((l: Lore) => (
+                  <div key={l.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                    <h3 className="font-semibold text-lg mb-2">{l.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-2">{l.category}</p>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                      <span>Location: {l.location}</span>
+                      <span>Era: {l.era}</span>
+                    </div>
+                    <div className="mt-4 flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        icon={<Pencil className="h-4 w-4" />}
+                        onClick={() => {
+                          setSelectedLore(l);
+                          setEditLoreModal(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        icon={<Trash className="h-4 w-4" />}
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this lore entry?')) {
+                            deleteLore(l.id);
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -538,12 +636,35 @@ const WorldDetailPage: React.FC = () => {
             </p>
             <Button
               variant="primary"
+              size="md"
               icon={<Plus className="h-5 w-5" />}
+              onClick={() => {
+                setSelectedLore(null);
+                setEditLoreModal(true);
+              }}
             >
               Create Your First Lore Entry
             </Button>
           </div>
         )}
+        
+        <Modal
+          isOpen={editLoreModal}
+          onClose={() => {
+            setEditLoreModal(false);
+            setSelectedLore(null);
+          }}
+          title={selectedLore ? 'Edit Lore' : 'Add New Lore'}
+        >
+          <LoreForm
+            lore={selectedLore || undefined}
+            onSubmit={handleLoreSubmit}
+            onCancel={() => {
+              setEditLoreModal(false);
+              setSelectedLore(null);
+            }}
+          />
+        </Modal>
       </main>
       
       <Modal
