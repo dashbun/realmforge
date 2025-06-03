@@ -1,22 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card, { CardContent } from '../ui/Card';
 import { Character } from '../../types';
-import { User } from 'lucide-react';
+import { User, Trash2 } from 'lucide-react';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 interface CharacterCardProps {
   character: Character;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-const CharacterCard: React.FC<CharacterCardProps> = ({ character, onClick }) => {
+const CharacterCard: React.FC<CharacterCardProps> = ({ character, onClick, onDelete }) => {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const defaultImageUrl = 'https://images.pexels.com/photos/7772716/pexels-photo-7772716.jpeg';
   
   return (
-    <Card 
-      className="h-full transition-all duration-300 hover:shadow-xl"
-      hoverEffect
-      onClick={onClick}
-    >
+    <div>
+      <Card 
+        className="h-full transition-all duration-300 hover:shadow-xl"
+        hoverEffect
+        onClick={onClick}
+      >
+        <div className="absolute top-2 right-2 z-10">
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDeleteModalOpen(true);
+              }}
+              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Trash2 className="h-5 w-5 text-red-500" />
+            </button>
+          )}
+        </div>
       <div 
         className="h-40 bg-cover bg-center"
         style={{ 
@@ -61,7 +78,22 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, onClick }) => 
           </div>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+
+      {onDelete && (
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={() => {
+            onDelete?.();
+            setIsDeleteModalOpen(false);
+          }}
+          title="Delete Character"
+          message={`Are you sure you want to delete ${character.name}? This action cannot be undone.`}
+          loading={false}
+        />
+      )}
+    </div>
   );
 };
 
