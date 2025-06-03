@@ -53,6 +53,20 @@ export interface PowerSystem {
   updatedAt: Date;
 }
 
+export interface Lore {
+  id: string;
+  worldId: string;
+  title: string;
+  content: string;
+  category: string;
+  location: string;
+  era: string;
+  importance: 'minor' | 'major' | 'crucial';
+  isSecret: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface PowerCategory {
   id: string;
   name: string;

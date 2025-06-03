@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { World, Character, Map, PowerSystem } from '../types';
+import { World, Character, Map, PowerSystem, Lore } from '../types';
 import { useAuth } from './AuthContext';
 
 interface WorldContextType {
@@ -8,6 +8,7 @@ interface WorldContextType {
   characters: Character[];
   maps: Map[];
   powerSystems: PowerSystem[];
+  lore: Lore[];
   isLoading: boolean;
   setCurrentWorld: (world: World) => void;
   createWorld: (name: string, description: string, imageUrl?: string) => Promise<World>;
@@ -22,6 +23,9 @@ interface WorldContextType {
   createPowerSystem: (data: Omit<PowerSystem, 'id' | 'worldId' | 'createdAt' | 'updatedAt'>) => Promise<PowerSystem>;
   updatePowerSystem: (id: string, data: Partial<PowerSystem>) => Promise<PowerSystem>;
   deletePowerSystem: (id: string) => Promise<boolean>;
+  createLore: (data: Omit<Lore, 'id' | 'worldId' | 'createdAt' | 'updatedAt'>) => Promise<Lore>;
+  updateLore: (id: string, data: Partial<Lore>) => Promise<Lore>;
+  deleteLore: (id: string) => Promise<boolean>;
 }
 
 const WorldContext = createContext<WorldContextType>({
@@ -30,6 +34,7 @@ const WorldContext = createContext<WorldContextType>({
   characters: [],
   maps: [],
   powerSystems: [],
+  lore: [],
   isLoading: true,
   setCurrentWorld: () => {},
   createWorld: async () => ({ 
@@ -136,6 +141,33 @@ const WorldContext = createContext<WorldContextType>({
     updatedAt: new Date()
   }),
   deletePowerSystem: async () => false,
+  createLore: async () => ({
+    id: '',
+    worldId: '',
+    title: '',
+    content: '',
+    category: '',
+    location: '',
+    era: '',
+    importance: 'minor',
+    isSecret: false,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }),
+  updateLore: async () => ({
+    id: '',
+    worldId: '',
+    title: '',
+    content: '',
+    category: '',
+    location: '',
+    era: '',
+    importance: 'minor',
+    isSecret: false,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }),
+  deleteLore: async () => false,
 });
 
 export const useWorlds = () => useContext(WorldContext);
@@ -146,6 +178,7 @@ export const WorldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [characters, setCharacters] = useState<Character[]>([]);
   const [maps, setMaps] = useState<Map[]>([]);
   const [powerSystems, setPowerSystems] = useState<PowerSystem[]>([]);
+  const [lore, setLore] = useState<Lore[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -156,6 +189,7 @@ export const WorldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setCharacters([]);
         setMaps([]);
         setPowerSystems([]);
+        setLore([]);
         return;
       }
 
@@ -176,6 +210,12 @@ export const WorldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const storedPowerSystems = localStorage.getItem(`realmforge_powersystems_${currentWorld.id}`);
         if (storedPowerSystems) {
           setPowerSystems(JSON.parse(storedPowerSystems));
+        }
+
+        // Load lore
+        const storedLore = localStorage.getItem(`realmforge_lore_${currentWorld.id}`);
+        if (storedLore) {
+          setLore(JSON.parse(storedLore));
         }
       } catch (error) {
         console.error('Failed to load world data:', error);
@@ -445,6 +485,57 @@ export const WorldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
+
+
+  const createLore = async (data: Omit<Lore, 'id' | 'worldId' | 'createdAt' | 'updatedAt'>): Promise<Lore> => {
+    if (!currentWorld) throw new Error('No world selected');
+    
+    const newLore: Lore = {
+      id: Date.now().toString(),
+      worldId: currentWorld.id,
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    const updatedLore = [...lore, newLore];
+    setLore(updatedLore);
+    localStorage.setItem(`realmforge_lore_${currentWorld.id}`, JSON.stringify(updatedLore));
+    
+    return newLore;
+  };
+
+  const updateLore = async (id: string, data: Partial<Lore>): Promise<Lore> => {
+    if (!currentWorld) throw new Error('No world selected');
+    
+    const loreIndex = lore.findIndex(l => l.id === id);
+    if (loreIndex === -1) throw new Error('Lore not found');
+    
+    const updatedLoreItem = {
+      ...lore[loreIndex],
+      ...data,
+      updatedAt: new Date(),
+    };
+    
+    const updatedLore = [...lore];
+    updatedLore[loreIndex] = updatedLoreItem;
+    
+    setLore(updatedLore);
+    localStorage.setItem(`realmforge_lore_${currentWorld.id}`, JSON.stringify(updatedLore));
+    
+    return updatedLoreItem;
+  };
+
+  const deleteLore = async (id: string): Promise<boolean> => {
+    if (!currentWorld) throw new Error('No world selected');
+    
+    const updatedLore = lore.filter(l => l.id !== id);
+    setLore(updatedLore);
+    localStorage.setItem(`realmforge_lore_${currentWorld.id}`, JSON.stringify(updatedLore));
+    
+    return true;
+  };
+
   return (
     <WorldContext.Provider
       value={{
@@ -453,6 +544,7 @@ export const WorldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         characters,
         maps,
         powerSystems,
+        lore,
         isLoading,
         setCurrentWorld,
         createWorld,
@@ -467,6 +559,9 @@ export const WorldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createPowerSystem,
         updatePowerSystem,
         deletePowerSystem,
+        createLore,
+        updateLore,
+        deleteLore,
       }}
     >
       {children}
