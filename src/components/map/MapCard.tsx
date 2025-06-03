@@ -1,22 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card, { CardContent } from '../ui/Card';
 import { Map } from '../../types';
-import { MapPin } from 'lucide-react';
+import { MapPin, Trash2 } from 'lucide-react';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 interface MapCardProps {
   map: Map;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-const MapCard: React.FC<MapCardProps> = ({ map, onClick }) => {
+const MapCard: React.FC<MapCardProps> = ({ map, onClick, onDelete }) => {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const defaultImageUrl = 'https://images.pexels.com/photos/4215113/pexels-photo-4215113.jpeg';
   
   return (
-    <Card 
-      className="h-full transition-all duration-300 hover:shadow-xl"
-      hoverEffect
-      onClick={onClick}
-    >
+    <div>
+      <Card 
+        className="h-full transition-all duration-300 hover:shadow-xl"
+        hoverEffect
+        onClick={onClick}
+      >
+        <div className="absolute top-2 right-2 z-10">
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDeleteModalOpen(true);
+              }}
+              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Trash2 className="h-5 w-5 text-red-500" />
+            </button>
+          )}
+        </div>
       <div 
         className="h-40 bg-cover bg-center"
         style={{ 
@@ -42,7 +59,22 @@ const MapCard: React.FC<MapCardProps> = ({ map, onClick }) => {
           </div>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+
+      {onDelete && (
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={() => {
+            onDelete?.();
+            setIsDeleteModalOpen(false);
+          }}
+          title="Delete Map"
+          message={`Are you sure you want to delete ${map.name}? This action cannot be undone.`}
+          loading={false}
+        />
+      )}
+    </div>
   );
 };
 

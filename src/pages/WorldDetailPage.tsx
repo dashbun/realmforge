@@ -25,10 +25,13 @@ const WorldDetailPage: React.FC = () => {
     lore,
     createCharacter,
     updateCharacter,
+    deleteCharacter,
     createMap,
     updateMap,
+    deleteMap,
     createPowerSystem,
     updatePowerSystem,
+    deletePowerSystem,
     createLore,
     updateLore,
     deleteLore
@@ -484,6 +487,7 @@ const WorldDetailPage: React.FC = () => {
                       setSelectedCharacter(character);
                       setEditCharacterModal(true);
                     }}
+                    onDelete={() => deleteCharacter(character.id)}
                   />
                 ))}
               </div>
@@ -539,6 +543,7 @@ const WorldDetailPage: React.FC = () => {
                       setSelectedMap(map);
                       setEditMapModal(true);
                     }}
+                    onDelete={() => deleteMap(map.id)}
                   />
                 ))}
               </div>
@@ -594,6 +599,7 @@ const WorldDetailPage: React.FC = () => {
                       setSelectedPowerSystem(powerSystem);
                       setEditPowerSystemModal(true);
                     }}
+                    onDelete={() => deletePowerSystem(powerSystem.id)}
                   />
                 ))}
               </div>
