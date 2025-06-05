@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { WorldProvider } from './context/WorldContext';
 import { ThemeProvider } from './context/ThemeContext';
-import AuthPage from './pages/AuthPage';
-import DashboardPage from './pages/DashboardPage';
-import WorldDetailPage from './pages/WorldDetailPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import ErrorBoundary from './components/ErrorBoundary';
+
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const WorldDetailPage = lazy(() => import('./pages/WorldDetailPage'));
 
 function App() {
   return (
@@ -15,12 +18,22 @@ function App() {
         <WorldProvider>
           <Router>
             <Routes>
-              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/auth" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ErrorBoundary>
+                    <AuthPage />
+                  </ErrorBoundary>
+                </Suspense>
+              } />
               <Route 
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>
-                    <DashboardPage />
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ErrorBoundary>
+                        <DashboardPage />
+                      </ErrorBoundary>
+                    </Suspense>
                   </ProtectedRoute>
                 } 
               />
@@ -28,7 +41,11 @@ function App() {
                 path="/worlds/:worldId" 
                 element={
                   <ProtectedRoute>
-                    <WorldDetailPage />
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ErrorBoundary>
+                        <WorldDetailPage />
+                      </ErrorBoundary>
+                    </Suspense>
                   </ProtectedRoute>
                 } 
               />
